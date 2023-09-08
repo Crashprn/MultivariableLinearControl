@@ -88,7 +88,7 @@ def plotResults(data: t.List[t.Tuple[np.ndarray, np.ndarray, np.ndarray]], forma
     plt.show()
 if __name__ == "__main__":
     t0 = 0
-    dt = 0.001
+    dt = 0.01
     tf = 10.0
     u = lambda t, x: np.array([np.sin(t)])
     x0 = np.array([0, 0, 0, 0])
