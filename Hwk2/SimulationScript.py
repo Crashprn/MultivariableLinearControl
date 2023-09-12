@@ -90,21 +90,34 @@ def plotResults(data: t.List[t.Tuple[np.ndarray, np.ndarray, np.ndarray]], forma
 
 if __name__ == "__main__":
     t0 = 0
-    dt = 0.1
+    dt = 0.01
     tf = 10.0
-    u = lambda t, x: np.array([0])
-    A = np.array([[2, 0, 0], [2, 2, 2], [3, 0, -1]])
-    eigval, eigvec = np.linalg.eig(A)
-    #x0 = eigvec[:,0].transpose() * 5
-    x0 = np.random.rand(3)
+    g = 9.8
+    m = 1/9.8
+    l = .25
+    b = 1
 
+    u = lambda t, x: np.array([l/np.sqrt(2)])
+    A = np.array([[0, 1], [g/l/np.sqrt(2), -b/(m*l**2)]])
+    eigval, eigvec = np.linalg.eig(A)
+    #x0 = eigvec[:,1].transpose()
+    x0 = np.array([np.pi/4 -.05, 0])
+
+    linearized_x = np.array([np.pi/4, 0])
+
+    linearized_u = np.array([l/np.sqrt(2)])
     '''
         Calculates the state dynamics using the current time, state, and control vector
     '''
     def f(t, x, u) -> np.ndarray:
-        B = np.array([[1], [-2], [1]])
+        B = np.array([[0], [1/(m*l**2)]])
         uvec = u(t, x)
-        xdot = A@x.transpose() + B@uvec.transpose()
+        delta_x = np.transpose(x - linearized_x)
+        delta_u = np.transpose(uvec - linearized_u)
+        first = A@delta_x
+        second = B@delta_u
+        xdot = first + second
+        ret = xdot.transpose()
         return xdot.transpose()
 
 
@@ -113,10 +126,6 @@ if __name__ == "__main__":
     data = []
 
     tvec, xvec = sim.pythonODE(x0, u)
-    uvec = sim.getControlVector(xvec, u)
-    data.append((tvec, xvec, uvec))
-
-    tvec, xvec = sim.eulerIntegration(x0, u)
     uvec = sim.getControlVector(xvec, u)
     data.append((tvec, xvec, uvec))
 
