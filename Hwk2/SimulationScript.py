@@ -69,7 +69,7 @@ class Simulation:
         data: list of tuples of time, state vectors
         Titles: list of titles for each plot
 '''
-def plotResults(data: t.List[t.Tuple[np.ndarray, np.ndarray, np.ndarray]], formats: t.List[str], titles: t.List[str]) -> None:
+def plotResults(data: t.List[t.Tuple[np.ndarray, np.ndarray, np.ndarray]], formats: t.List[str], titles: t.List[str], title: str, save=True) -> None:
     numx = data[0][1].shape[1] 
     numu =  1 if len(data[0][2].shape) <= 1 else data[0][2].shape[1]
     numplots = numx + numu
@@ -85,9 +85,14 @@ def plotResults(data: t.List[t.Tuple[np.ndarray, np.ndarray, np.ndarray]], forma
             # Plotting u's on subplot
             axs[j].plot(tvec, uvec[:, j-numx], formats[i])
             axs[j].set(xlabel='time', ylabel=f'u{j-numx + 1}')
+    
+    fig.suptitle(title)
+
+    if save:
+        plt.savefig(title.replace(" ", "_") + ".png")
 
 
-def problem1(t0, dt, tf, u, f, A, linearized_x):
+def problem1(t0, dt, tf, u, f, A, linearized_x, title):
     eigval, eigvec = np.linalg.eig(A)
     x0 = eigvec[:,1].transpose() + linearized_x
     sim = Simulation(t0, dt, tf, u, f, x0)
@@ -98,9 +103,9 @@ def problem1(t0, dt, tf, u, f, A, linearized_x):
     uvec = sim.getControlVector(xvec, u)
     data.append((tvec, xvec, uvec))
 
-    plotResults(data, ['b', 'r:'], ['theta', 'theta_dot'])
+    plotResults(data, ['b', 'r:'], ['theta', 'theta_dot'], title)
 
-def problem2(t0, dt, tf, u, f, A, linearized_x):
+def problem2(t0, dt, tf, u, f, A, linearized_x, title):
     eigval, eigvec = np.linalg.eig(A)
     x0 = eigvec[:,0].transpose() + linearized_x
     sim = Simulation(t0, dt, tf, u, f, x0)
@@ -111,10 +116,10 @@ def problem2(t0, dt, tf, u, f, A, linearized_x):
     uvec = sim.getControlVector(xvec, u)
     data.append((tvec, xvec, uvec))
 
-    plotResults(data, ['b', 'r:'], ['theta', 'theta_dot'])
+    plotResults(data, ['b', 'r:'], ['theta', 'theta_dot'], title)
 
 
-def problem3(t0, dt, tf, u, f, A, linearized_x):
+def problem3(t0, dt, tf, u, f, A, linearized_x, title):
     x0 = np.array([-.05, 0]) + linearized_x
     sim = Simulation(t0, dt, tf, u, f, x0)
 
@@ -124,7 +129,7 @@ def problem3(t0, dt, tf, u, f, A, linearized_x):
     uvec = sim.getControlVector(xvec, u)
     data.append((tvec, xvec, uvec))
 
-    plotResults(data, ['b', 'r:'], ['theta', 'theta_dot'])
+    plotResults(data, ['b', 'r:'], ['theta', 'theta_dot'], title)
 
 def sanityCheck(t0, dt, tf, u, f, A, linearized_x):
     x0 = np.array([0, 0]) + linearized_x
@@ -160,9 +165,9 @@ def linearProblem(t0, dt, tf, g, m , l , b):
         xdot = first + second
         return xdot.transpose()
     
-    problem1(t0, dt, tf, u, f, A, linearized_x)
-    problem2(t0, dt, tf, u, f, A, linearized_x)
-    problem3(t0, dt, tf, u, f, A, linearized_x)
+    problem1(t0, dt, tf, u, f, A, linearized_x, "Linearized Problem 1")
+    problem2(t0, dt, tf, u, f, A, linearized_x, "Linearized Problem 2")
+    problem3(t0, dt, tf, u, f, A, linearized_x, "Linearized Problem 3")
 
 
 def nonLinearProblem(t0, dt, tf, g, m , l , b):
@@ -179,9 +184,9 @@ def nonLinearProblem(t0, dt, tf, g, m , l , b):
 
         return (first + second).transpose()
     
-    problem1(t0, dt, tf, u, f, A, linearized_x)
-    problem2(t0, dt, tf, u, f, A, linearized_x)
-    problem3(t0, dt, tf, u, f, A, linearized_x)
+    problem1(t0, dt, tf, u, f, A, linearized_x, "Non-Linearized Problem 1")
+    problem2(t0, dt, tf, u, f, A, linearized_x, "Non-Linearized Problem 2")
+    problem3(t0, dt, tf, u, f, A, linearized_x, "Non-Linearized Problem 3")
 
     
  
