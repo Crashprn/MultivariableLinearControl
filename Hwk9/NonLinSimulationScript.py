@@ -52,11 +52,12 @@ class Simulation:
         data: list of tuples of time, state vectors
         Titles: list of titles for each plot
 '''
-def plotResults(data: t.List[t.Tuple[np.ndarray, np.ndarray, np.ndarray]], formats: t.List[str] ) -> None:
+def plotResults(data: t.List[t.Tuple[np.ndarray, np.ndarray, np.ndarray]], formats: t.List[str], title) -> None:
     numx = data[0][1].shape[1] 
     numu =  1 if len(data[0][2].shape) <= 1 else data[0][2].shape[1]
     numplots = numx + numu
     fig, axs = plt.subplots(numplots)
+    fig.suptitle(title)
     for i, dat in enumerate(data):
         tvec, xvec, uvec = dat
         for j in range(numx):
@@ -70,7 +71,7 @@ def plotResults(data: t.List[t.Tuple[np.ndarray, np.ndarray, np.ndarray]], forma
             axs[j].set(xlabel='time', ylabel=f'u{j-numx + 1}')
 
 
-def Simulate(zero_state_value):
+def Simulate(zero_state_value, title):
     t0 = 0
     dt = 0.01
     tf = 10.0
@@ -156,8 +157,8 @@ def Simulate(zero_state_value):
     uvec = sim.getControlVector(xvec, u_func)
     data.append((tvec, xvec, uvec))
 
-    plotResults(data, ['b', 'r:'])
+    plotResults(data, ['b', 'r:'], title)
 
 if __name__ == "__main__":
-    Simulate(np.pi)
+    Simulate(np.pi, "Linearized around pi")
     plt.show()
