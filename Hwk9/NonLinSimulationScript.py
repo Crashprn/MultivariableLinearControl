@@ -70,12 +70,115 @@ def plotResults(data: t.List[t.Tuple[np.ndarray, np.ndarray, np.ndarray]], forma
             axs[j].plot(tvec, uvec[:, j-numx], formats[i])
             axs[j].set(xlabel='time', ylabel=f'u{j-numx + 1}')
 
+def Simulate_special(zero_state_value, title):
+    t0 = 0
+    dt = 0.01
+    tf = 10.0
+    u_f = lambda t, x: np.array([np.sin(t)])
+    x0 = np.array([0, 0, np.pi - .25, 0])
+
+    x, x_dot, x_ddot, theta, theta_dot, theta_ddot, u, t = sp.symbols('x x_dot x_ddot theta theta_dot theta_ddot u t')
+    M, m, b, I, g, l = sp.symbols('M m b I g l')
+    params = {M: .5, m: .2, b: 0.1, I: 0.006, g: 9.8, l: 0.3}
+
+    f1 = (M+m)*x_ddot + b*x_dot + m*l*theta_ddot*sp.cos(theta) - m*l*theta_dot**2*sp.sin(theta) - u
+    f2 = (I + m*l**2)*theta_ddot + m*g*l*sp.sin(theta) + m*l*x_ddot*sp.cos(theta)
+
+    soln = sp.solve((f1, f2), (x_ddot, theta_ddot), dict=True)[0]
+    x_ddot = soln[x_ddot]
+    theta_ddot = soln[theta_ddot]
+
+    x_ddot_f = sp.lambdify((x, x_dot, theta, theta_dot, u), x_ddot.subs(params), 'numpy')
+    theta_ddot_f = sp.lambdify((x, x_dot, theta, theta_dot, u), theta_ddot.subs(params), 'numpy')
+
+    X = sp.Matrix([x, x_dot, theta, theta_dot])
+    U = sp.Matrix([u])
+
+    f = sp.Matrix([[x_dot], [x_ddot], [theta_dot], [theta_ddot]])
+
+    zero_state = {theta: zero_state_value, theta_dot: 0}
+
+    # Finding trajectory
+
+    z_dot = f.subs(zero_state).subs(params)
+    u_sol = sp.solve(z_dot[3], u, dict=True)[0]
+    z_dot = z_dot.subs(u_sol)
+    x_ddot_sol = z_dot[1]
+    zero_state[x_dot] = x_ddot_sol * t
+    zero_state[x] = x_ddot_sol * t**2 / 2
+    u_sol = u_sol[u].subs(zero_state)
+    zero_state[u] = u_sol
+
+    for key, value in zero_state.items():
+        sp.pprint(sp.Eq(key, value))
+
+    df_dx = f.jacobian(X)
+    df_du = f.jacobian(U)
+
+    # Linearize
+    A = df_dx.subs(zero_state).subs(params).subs(t, 0)
+    B = df_du.subs(zero_state).subs(params)
+
+    sp.pprint(A)
+    sp.pprint(B)
+
+    # Evaluating Stability
+    A = np.array(A).astype(np.float64)
+    B = np.array(B).astype(np.float64)
+
+    eigs = np.linalg.eig(A)[0]
+    print("Eignevalues: ", end="")
+    print(*eigs, sep=", ")
+
+    # Controllability
+    gamma = ct.ctrb(A, B)
+    
+    # Controllability
+    print("Rank of Controllability Matrix: ", np.linalg.matrix_rank(gamma))
+    K = ct.place(A, B, [-1, -2, -3, -4])
+    print("K: ")
+    sp.pprint(sp.Matrix(K))
+
+    k_eigs = np.linalg.eig(A - B @ K)[0]
+    print("Eignevalues of A - BK: ", end="")
+    print(*k_eigs, sep=", ")
+
+    # Simulate
+
+    def u_func (t, x_in):
+        x_eq = np.array([zero_state[x].subs('t',t), zero_state[x_dot].subs('t', t), zero_state_value, 0])
+        return (-K @ (x_in-x_eq).T  + zero_state[u].subs('t', t)).astype(np.float64)
+    '''
+        Calculates the state dynamics using the current time, state, and control vector
+    '''
+    def f(t, x_in, u_in) -> np.ndarray:
+        uvec = u_in(t, x_in)
+
+        thetaddot = theta_ddot_f(x_in[0], x_in[1], x_in[2], x_in[3], uvec[0])
+        xddot = x_ddot_f(x_in[0], x_in[1], x_in[2], x_in[3], uvec[0])
+
+
+        xdot  = np.array([x_in[1], xddot, x_in[3], thetaddot])
+        return xdot
+
+
+
+    sim = Simulation(t0, dt, tf, u, f, x0)
+
+    data = []
+
+    tvec, xvec = sim.pythonODE(x0, u_func)
+    uvec = sim.getControlVector(xvec, u_func)
+    data.append((tvec, xvec, uvec))
+
+    plotResults(data, ['b', 'r:'], title)
+
 
 def Simulate(zero_state_value, title):
     t0 = 0
     dt = 0.01
     tf = 10.0
-    u = lambda t, x: np.array([np.sin(t)])
+    u_f = lambda t, x: np.array([np.sin(t)])
     x0 = np.array([0, 0, np.pi - .25, 0])
 
     x, x_dot, x_ddot, theta, theta_dot, theta_ddot, u = sp.symbols('x x_dot x_ddot theta theta_dot theta_ddot u')
@@ -161,4 +264,5 @@ def Simulate(zero_state_value, title):
 
 if __name__ == "__main__":
     Simulate(np.pi, "Linearized around pi")
+    Simulate_special(np.pi*3/4, "Linearized around 3pi/4")
     plt.show()
