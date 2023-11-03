@@ -135,7 +135,9 @@ def Simulate_special(zero_state_value, title):
     
     # Controllability
     print("Rank of Controllability Matrix: ", np.linalg.matrix_rank(gamma))
-    K = ct.place(A, B, [-1, -2, -3, -4])
+    Q = np.diag([1, 2, 3, 4])
+    R = np.array([[1]])
+    K = ct.lqr(A, B, Q, R)[0]
     print("K: ")
     sp.pprint(sp.Matrix(K))
 
@@ -224,7 +226,9 @@ def Simulate(zero_state_value, title):
     # Controllability
     gamma = ct.ctrb(A, B)
     print("Rank of Controllability Matrix: ", np.linalg.matrix_rank(gamma))
-    K = ct.place(A, B, [-1, -2, -3, -4])
+    Q = np.diag([1, 2, 3, 4])
+    R = np.array([[1]])
+    K = ct.lqr(A, B, Q, R)[0]
     print("K: ")
     sp.pprint(sp.Matrix(K))
 
