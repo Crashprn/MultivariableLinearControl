@@ -74,7 +74,6 @@ def Simulate_special(zero_state_value, title):
     t0 = 0
     dt = 0.01
     tf = 10.0
-    u_f = lambda t, x: np.array([np.sin(t)])
     x0 = np.array([0, 0, np.pi - .25, 0])
 
     x, x_dot, x_ddot, theta, theta_dot, theta_ddot, u, t = sp.symbols('x x_dot x_ddot theta theta_dot theta_ddot u t')
@@ -180,7 +179,6 @@ def Simulate(zero_state_value, title):
     t0 = 0
     dt = 0.01
     tf = 10.0
-    u_f = lambda t, x: np.array([np.sin(t)])
     x0 = np.array([0, 0, np.pi - .25, 0])
 
     x, x_dot, x_ddot, theta, theta_dot, theta_ddot, u = sp.symbols('x x_dot x_ddot theta theta_dot theta_ddot u')

@@ -41,7 +41,7 @@ def controllable_decomposition(A, B):
 if __name__ == "__main__":
     # Parameters
     m_c, m_s, d, L, R, I_2, I_3, g = sp.symbols('m_c m_s d L R I_2 I_3 g')
-    params = {m_c: .503, m_s: 4.315, d:.1, L:.1, R:.073, I_2:.003679, I_3:.02807, g:9.81}
+    params = {m_c: .503, m_s: 4.315, d:.1, L:.1, R:.073, I_2:.003679, I_3:.02807, g:9.8}
 
     # States
     x, y, v, v_dot, phi, phi_dot, phi_ddot, psi, omega, omega_dot = sp.symbols('x y v v_dot phi phi_dot phi_ddot psi omega omega_dot')
