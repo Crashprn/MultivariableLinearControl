@@ -49,10 +49,7 @@ class Segway:
         u_ff_1 , u_ff_2 = sp.symbols('u_ff_1 u_ff_2')
         u_ff = sp.Matrix([[u_ff_1], [u_ff_2]])
 
-        first = self.B@u_ff
-        second = self.A@self.x_d
-
-        u_ff_sol = sp.solve(first - second.reshape(4,1), (u_ff_1, u_ff_2), dict=True)[0]
+        u_ff_sol = sp.solve(self.B@u_ff - (self.A@self.x_d).reshape(4,1), (u_ff_1, u_ff_2), dict=True)[0]
 
         return np.array([u_ff_sol[u_ff_1], u_ff_sol[u_ff_2]]).T
 
@@ -62,7 +59,7 @@ class Segway:
 
         u_total = -self.K@(z-self.x_d) + self.u_ff
 
-        return(u_total[0], u_total[1])
+        return u_total.T
 
     def x_dot(self, t, x) -> np.ndarray:
         

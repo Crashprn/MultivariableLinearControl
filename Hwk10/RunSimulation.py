@@ -12,6 +12,8 @@ class Simulation:
         self.dt: float = dt
         self.timespan: np.ndarray = np.arange(t0, tf, dt)
         self.u_size: int = u_size
+        self.last_sim_x = []
+        self.last_sim_u = []
     
     '''
     Calculates the control vector over the specified time span
@@ -24,10 +26,12 @@ class Simulation:
     OUTPUTS:
         uvec: mxn vector of control inputs
     '''
-    def getControlVector(self, xvec, u) -> np.ndarray:
+    def getControlVector(self, u) -> np.ndarray:
         u_vec = np.zeros((len(self.timespan), self.u_size))
         for i in range(len(self.timespan)):
-            u_vec[i,:] = u(self.timespan[i], xvec[i, :]).squeeze()
+            u_vec[i,:] = u(self.timespan[i], self.last_sim_x[i, :]).squeeze()    
+        self.last_sim_u = u_vec
+
         return u_vec
     
     '''
@@ -41,7 +45,10 @@ class Simulation:
     '''
     def pythonODE(self, f, x0) -> t.Tuple[np.ndarray, np.ndarray]:
         xvec = integrate.odeint(f, x0, self.timespan, tfirst=True)
-        return self.timespan, xvec
+        self.last_sim_x = xvec
+    
+    def get_last_sim_x(self) -> np.ndarray:
+        return self.last_sim_x
     
     '''
         Plots the results of the simulation
@@ -49,26 +56,33 @@ class Simulation:
             data: list of tuples of time, state vectors
             Titles: list of titles for each plot
     '''
-    def plotResults(data: t.List[t.Tuple[np.ndarray, np.ndarray, np.ndarray]], formats: t.List[str], titles: t.List[str], title: str, save=True, target=None) -> None:
-        numx = data[0][1].shape[1] 
-        numu =  1 if len(data[0][2].shape) <= 1 else data[0][2].shape[1]
-        numplots = numx + numu
+    def plotResults(self, indexes: t.List[int], formats: t.List[str], titles: t.List[str], title: str, save=True, target=None, couple=False) -> None:
+        time = self.timespan.reshape(-1,1)
+        data = np.concatenate((self.timespan.reshape(-1, 1), self.last_sim_x, self.last_sim_u), axis=1)
+        plot_xy = []
+        if couple:
+            plot_xy = [(indexes[i], indexes[i+1]) for i in range(0, len(indexes), 2)]
+        else:
+            plot_xy = [(0, i+1) for i in indexes]
+
+        numplots = len(plot_xy)
         fig, axs = plt.subplots(numplots)
-        for i, dat in enumerate(data):
-            tvec, xvec, uvec = dat
-            for j in range(numx):
-                # Plotting x's on subplot 
-                axs[j].plot(tvec, xvec[:, j], formats[i])
+
+        for i,(x,y) in enumerate(plot_xy):
+            x_d = data[:, x]
+            y_d = data[:, y]
+            if numplots == 1:
+                axs.plot(x_d, y_d, formats[i])
                 if target is not None:
-                    axs[j].plot(tvec, np.ones(len(tvec))*target, 'k--')
-                axs[j].set(xlabel='time', ylabel=titles[j])
-                axs[j].set_xlim([tvec[0], tvec[-1]])
-            
-            for j in range(numx, numplots):
-                # Plotting u's on subplot
-                axs[j].plot(tvec, uvec[:, j-numx], formats[i])
-                axs[j].set(xlabel='time', ylabel=f'u{j-numx + 1}')
-                axs[j].set_xlim([tvec[0], tvec[-1]])
+                    axs.plot(x_d, np.ones(len(x_d))*target[i], 'k--')
+                axs.set(xlabel='time', ylabel=titles[i])
+
+            else:
+                axs[i].plot(x_d, y_d, formats[i])
+                if target is not None:
+                    axs[i].plot(x_d, np.ones(len(x_d))*target[i], 'k--')
+                axs[i].set(xlabel='time', ylabel=titles[i])
+                axs[i].set_xlim([x_d[0], x_d[-1]])
 
         fig.suptitle(title)
 
@@ -76,7 +90,7 @@ class Simulation:
             plt.savefig(title.replace(" ", "_") + ".png")
 
 
-def Simulate():
+def createDynamics() -> t.Tuple[np.ndarray, np.ndarray, t.List[t.Callable]]:
     # Parameters
     m_c, m_s, d, L, R, I_2, I_3, g = sp.symbols('m_c m_s d L R I_2 I_3 g')
     params = {m_c: .503, m_s: 4.315, d:.1, L:.1, R: .073, I_2: .003679, I_3: .02807, g: 9.8}
@@ -121,21 +135,37 @@ def Simulate():
 
     A = np.array(A).astype(np.float64)
     B = np.array(B).astype(np.float64)
+    
+    return (A,B,dynamics)
 
+
+def Simulate():
+    
     # Simulation Part
     x0 = np.array([0, 0, 0, 0, .5, np.pi/4, 0])
     v_d = 1
     omega_d = 0.25
-    segway = Segway(v_d, omega_d, A, B, dynamics)
+    A, B, dynamics = createDynamics()
+    segway = Segway(v_d, omega_d, A, B, dynamics, [-2, -2, -3, -4])
 
     t0 = 0
     tf = 20
     dt = 0.01
 
     simulation = Simulation(t0, dt, tf, 2)
-    tvec, xvec = simulation.pythonODE(segway.x_dot, x0)
 
-    uvec = simulation.getControlVector(xvec, segway.get_feedback_control)
+    simulation.pythonODE(segway.x_dot, x0)
+    simulation.getControlVector(segway.get_feedback_control)
+
+    #simulation.plotResults(np.array([3, 4, 5, 6, 7, 8]), ['b', 'b', 'b', 'b', 'r', 'r'], ['Omega', 'V', 'Phi', 'Phi_dot', 'U_1', 'U_2'], "State Plot", save=False)
+
+    simulation.plotResults(np.array([1, 2]), ['b', 'b'], ['X', 'Y'], "X and Y plot", save=False, couple=True)
+    simulation.plotResults(np.array([5, 4, 3]), ['b', 'b', 'b', 'b', 'r', 'r'], ['Tilt Angle', 'Trans. Vel', 'Rot. Vel'], "State Plot",
+                           target=[0, v_d, omega_d], save=False)
+
+    plt.show()
+
+
 
 
 if __name__ == "__main__":
