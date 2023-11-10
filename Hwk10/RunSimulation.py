@@ -75,7 +75,7 @@ class Simulation:
                 axs.plot(x_d, y_d, formats[i])
                 if target is not None:
                     axs.plot(x_d, np.ones(len(x_d))*target[i], 'k--')
-                axs.set(xlabel='time', ylabel=titles[i])
+                axs.set(xlabel=titles[i][0], ylabel=titles[i][1])
 
             else:
                 axs[i].plot(x_d, y_d, formats[i])
@@ -159,7 +159,7 @@ def Simulate():
 
     #simulation.plotResults(np.array([3, 4, 5, 6, 7, 8]), ['b', 'b', 'b', 'b', 'r', 'r'], ['Omega', 'V', 'Phi', 'Phi_dot', 'U_1', 'U_2'], "State Plot", save=False)
 
-    simulation.plotResults(np.array([1, 2]), ['b', 'b'], ['X', 'Y'], "X and Y plot", save=False, couple=True)
+    simulation.plotResults(np.array([1, 2]), ['b', 'b'], [['X', 'Y']], "X and Y plot", save=False, couple=True)
     simulation.plotResults(np.array([5, 4, 3]), ['b', 'b', 'b', 'b', 'r', 'r'], ['Tilt Angle', 'Trans. Vel', 'Rot. Vel'], "State Plot",
                            target=[0, v_d, omega_d], save=False)
 

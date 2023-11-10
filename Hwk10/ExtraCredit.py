@@ -179,7 +179,7 @@ class Simulation:
 def Simulate():
     t0 = 0
     dt = 0.01
-    tf = 20
+    tf = 10
 
     x0 = np.array([0, 0, 0, 0, 0])
 
@@ -211,7 +211,7 @@ def Simulate():
             [0]
         ])
     
-    robot = PointControlRobot(A, B, q_d, q_ddot_d, epsilon=.2, poles=[-3, -4, -5, -6])
+    robot = PointControlRobot(A, B, q_d, q_ddot_d, epsilon=.01, poles=[-3, -4, -5, -6])
 
     sim = Simulation(t0, dt, tf, 6)
 
