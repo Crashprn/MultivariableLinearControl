@@ -126,7 +126,7 @@ def simulate(A, B, Q, R, S, M, x_0, t_0, dt, T, title):
 
     uvec = sim.getControlVector(xvec_ode, u)
 
-    plotResults([(tvec_ode, xvec_ode, uvec), (tvec_euler, xvec_euler, uvec)], ['b', 'r--'], ['x1', 'x2', 'x_3'], title)
+    plotResults([(tvec_ode, xvec_ode, uvec), (tvec_euler, xvec_euler, uvec)], ['b', 'r--'], ['x1', 'x2', 'x3'], title)
 
 def plot_result(data, t):
     labels = ['P_11', 'P_12', 'P_13', 'P_12', 'P_22', 'P_23', 'P_13', 'P_23', 'P_33']

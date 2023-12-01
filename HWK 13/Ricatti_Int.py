@@ -93,7 +93,7 @@ def simulate(A, B, Q, R, S, x_0, t_0, dt, T):
 
     uvec = sim.getControlVector(xvec_ode, u)
 
-    plotResults([(tvec_ode, xvec_ode, uvec), (tvec_euler, xvec_euler, uvec)], ['b', 'r--'], ['x1', 'x2', 'u'], "Simulation Results")
+    plotResults([(tvec_ode, xvec_ode, uvec), (tvec_euler, xvec_euler, uvec)], ['b', 'r--'], ['x1', 'x2', 'x3'], "Simulation Results")
 
 
 
