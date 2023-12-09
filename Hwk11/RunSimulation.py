@@ -43,7 +43,7 @@ class Simulation:
         OUTPUTS:
             xvec: mxn matrix of states
     '''
-    def pythonODE(self, f, x0) -> t.Tuple[np.ndarray, np.ndarray]:
+    def pythonODE(self, f, x0, u) -> t.Tuple[np.ndarray, np.ndarray]:
         xvec = integrate.odeint(f, x0, self.timespan, tfirst=True)
         self.last_sim_x = xvec
     
