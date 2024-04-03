@@ -175,10 +175,13 @@ def controlParamters_PiFourths_a(P, Q, R):
     ])
     
     # Create feedforward term
+    sp.pprint(sp.Matrix(A))
     u_ff = sp.symbols('u_ff')
     eq = B*u_ff + A@P.xd
     u_ff_sol = sp.solve(eq[1], u_ff, dict=True)[0]
     P.u_ff = np.array([u_ff_sol[u_ff]]).astype(np.float64)
+
+    print(B*P.u_ff +A@P.xd)
 
     return P
 
